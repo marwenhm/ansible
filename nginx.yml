@@ -1,0 +1,15 @@
+- name: Curl a URL on Kubernetes Worker
+  hosts: Worker
+  tasks:
+    - name: Check Nginx service status
+      service:
+        name: nginx
+        state: started
+      ignore_errors: yes
+
+    - name: Restart Nginx if it's not running
+      service:
+        name: nginx
+        state: restarted
+      when: result is failed
+      ignore_errors: no
