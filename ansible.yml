@@ -25,7 +25,7 @@
 
     - name: Print status if Nginx was restarted
       debug:
-        msg: "Nginx was down and has been restarted."
+        msg: "Nginx was down and Has Been restarted."
       when: service_status.failed  
 
     - name: Curl the URL if Nginx is running
