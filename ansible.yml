@@ -1,34 +1,39 @@
 ---
-- name: Curl a URL on Kubernetes Worker
+- name: Manage Nginx on Kubernetes Worker
   hosts: Worker
-  become: yes
-
+  become: yes  
   tasks:
-    - name: Check Nginx service status
-      ansible.builtin.systemd:
+    - name: Install Nginx if not present
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes  
+      ignore_errors: yes  
+
+    - name: Ensure Nginx service is running
+      service:
         name: nginx
         state: started
-      register: nginx_status
-      ignore_errors: yes  # Corrected from "ignore_errores" to "ignore_errors"
+      register: service_status
+      ignore_errors: true  
 
     - name: Restart Nginx if it's not running
-      ansible.builtin.systemd:
+      service:
         name: nginx
         state: restarted
-      when: nginx_status is failed
+      when: service_status.failed  
 
-    - name: Print message if Nginx was down
-      ansible.builtin.debug:  # Changed from ansible.builtin.systemd to ansible.builtin.debug
-        msg: "Nginx was down but now has been restarted."
-      when: nginx_status is failed
+    - name: Print status if Nginx was restarted
+      debug:
+        msg: "Nginx was down and has been restarted."
+      when: service_status.failed  
 
-    - name: Curl The URL
-      ansible.builtin.command:
-        cmd: curl http://135.237.121.44:30080
+    - name: Curl the URL if Nginx is running
+      command: curl http://135.237.121.44:30080
       register: curl_response
-      when: nginx_status is succeeded
+      when: not service_status.failed 
 
     - name: Print curl response
-      ansible.builtin.debug:
+      debug:
         var: curl_response.stdout
-      when: nginx_status is succeeded
+      when: not service_status.failed  
